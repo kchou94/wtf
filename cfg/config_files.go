@@ -2,15 +2,27 @@ package cfg
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
 )
 
 const (
+	// WtfConfigDirV1 defines the path to the first version of configuration. Do not use this
+	WtfConfigDirV1 = "~/.wtf/"
+
 	// WtfConfigDirV2 defines the path to the second version of the configuration. Use this.
 	WtfConfigDirV2 = "~/.config/wtf/"
 )
+
+// Initialize takes care of settings up the initial state of WTF configuration
+// It ensures necessary directories and files exist
+func Initialize(hasCustom bool) {
+	if !hasCustom {
+		migrateOldConfig()
+	}
+}
 
 // WtfConfigDir returns the absolute path to the configuration directory
 func WtfConfigDir() (string, error) {
@@ -62,4 +74,35 @@ func home() (string, error) {
 	}
 
 	return currentUser.HomeDir, nil
+}
+
+// migrateOldConfig copies any existing configuration from the old location
+// to the new, XDG-compatible location
+func migrateOldConfig() {
+	srcDir, _ := expandHomeDir(WtfConfigDirV1)
+	destDir, _ := WtfConfigDir()
+
+	// If the old config directory doesn't exist, do not move
+	if _, err := os.Stat(srcDir); os.IsNotExist(err) {
+		return
+	}
+
+	// If the new config directory already exists, do not move
+	if _, err := os.Stat(destDir); err == nil {
+		return
+	}
+
+	// Time to move
+	err := Copy(srcDir, destDir)
+	if err != nil {
+		panic(err)
+	}
+
+	// Delete the old directory if the new one exists
+	if _, err := os.Stat(destDir); err == nil {
+		err := os.RemoveAll(srcDir)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }

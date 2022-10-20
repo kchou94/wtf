@@ -13,4 +13,7 @@ func main() {
 	// Paras and handle flags
 	flags := flags.NewFlags()
 	flags.Parse()
+
+	// Load the configuration file
+
 }
