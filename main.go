@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/bernylinville/wtf/flags"
@@ -13,5 +12,5 @@ func main() {
 
 	// Paras and handle flags
 	flags := flags.NewFlags()
-	fmt.Println(flags)
+	flags.Parse()
 }
